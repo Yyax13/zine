@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>upload — pwn</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/css-others/u.css">
+    <link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
+    <script src="/js/auth_widget.js" defer></script>
+    <script src="/js/glitch.js"></script>
+    <script src="/js/newtab.js"></script>
+    <script src="/js/footer_domain.js" defer></script>
+</head>
+
+<body>
+    <div class="main_container">
+        <header class="header">
+            <div class="left-section">
+                <a href="/" class="menu-link">/home</a>
+                <a href="/p" class="menu-link">/papers</a>
+                <a href="/a/about-me" class="menu-link">/about-me</a>
+            </div>
+            <div class="right-section">
+                <span class="glitch-text">pwn@buff3r</span>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="upload-container">
+                <h2>Enviar arquivo para o storage</h2>
+                <div id="authWidget" style="margin-bottom:12px"></div>
+
+                <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
+                    <label for="title">Título</label>
+                    <input type="text" name="title" id="title" maxlength="90" placeholder="Digite o título..."><br>
+
+                    <br><label for="newFile">Arquivo</label>
+                    <input type="file" name="newFile" id="newFile" required><br>
+
+                    <button type="submit">Enviar</button>
+                </form>
+
+                <div id="resp" class="message">Resposta aparecerá aqui</div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <span class="site-copyright">&copy; 2026 - pwnbuffer.org </span>
+                <span class="footer-separator">|</span>
+                <a href="/a/wallpapers" target="_blank" class="footer-link">[ Wallpapers ]</a>
+                <span class="footer-separator">|</span>
+                <a href="https://discord.gg/pwnbuffer" target="_blank" class="footer-link">[ Servidor Discord ]</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const resp = document.getElementById('resp');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            resp.style.display = 'block';
+            resp.textContent = 'Enviando...';
+
+            const title = document.getElementById('title').value;
+            const fileInput = document.getElementById('newFile');
+            if (!fileInput.files.length) {
+                resp.textContent = 'Selecione um arquivo.';
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append('title', title);
+            fd.append('newFile', fileInput.files[0]);
+
+                try {
+                const r = await fetch('/api/files', { method: 'POST', body: fd, credentials: 'same-origin' });
+                const json = await r.json();
+                if (!r.ok) {
+                    resp.className = 'message error';
+                    resp.textContent = 'Erro: ' + (json.error || JSON.stringify(json));
+                    return;
+                }
+                resp.className = 'message success';
+                resp.innerHTML = '<strong>OK</strong>\n' + JSON.stringify(json, null, 2) + '\n\nLink para arquivo: ' + window.location.origin + '/f/' + json.file.slug;
+                form.reset();
+            } catch (err) {
+                resp.className = 'message error';
+                resp.textContent = 'Erro ao conectar: ' + err.message;
+            }
+        });
+
+        // Auth widget handled by /js/auth_widget.js
+    </script>
+</body>
+
+</html>

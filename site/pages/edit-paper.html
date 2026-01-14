@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>edit — pwn</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/css-others/u.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
+    <script src="/js/auth_widget.js" defer></script>
+    <script src="/js/glitch.js"></script>
+    <script src="/js/newtab.js"></script>
+    <script src="/js/site_config.js" defer></script>
+    <script src="/js/footer_domain.js" defer></script>
+</head>
+
+<body>
+    <div class="main_container">
+        <header class="header">
+            <div class="left-section">
+                <a href="/" class="menu-link">/home</a>
+                <a href="/p" class="menu-link">/papers</a>
+                <a href="/a/about-me" class="menu-link">/about-me</a>
+            </div>
+            <div class="right-section">
+                <span class="glitch-text">pwn@buff3r</span>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="upload-container">
+                <h2>Editar Artigo</h2>
+                <div id="authWidget" style="margin-bottom:12px"></div>
+                <div id="loadingMessage" style="margin-bottom:12px">Carregando artigo...</div>
+                <form id="editForm" enctype="multipart/form-data" style="display:none">
+                    <label for="title">Título</label>
+                    <input type="text" id="title" name="title" maxlength="75" placeholder="Digite o título..." required><div class="slug-preview">slug: <span id="slugOutput"></span><br></div>
+
+                    <br><label for="shortDescription">Descrição</label>
+                    <textarea id="shortDescription" name="short_description" placeholder="Resumo curto..." rows="4"
+                        required></textarea><br>
+
+                    <br><label for="tags">Tags (vírgula separadas)</label>
+                    <input type="text" id="tags" name="tags" placeholder="ex: segurança,exploit,crypto"><br>
+
+                    <br><label for="file">Arquivo (deixe em branco para manter o conteúdo atual)</label>
+                    <input type="file" id="file" name="file"><br>
+
+                    <button type="submit">Atualizar</button>
+                    <button type="button" id="cancelBtn" onclick="history.back()">Cancelar</button>
+                </form>
+
+                <div id="message" class="message"></div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <span class="site-copyright">&copy; 2026 - pwnbuffer.org </span>
+                <span class="footer-separator">|</span>
+                <a href="/a/wallpapers" target="_blank" class="footer-link">[ Wallpapers ]</a>
+                <span class="footer-separator">|</span>
+                <a href="https://discord.gg/pwnbuffer" target="_blank" class="footer-link">[ Servidor Discord ]</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const titleInput = document.getElementById('title');
+        const slugOutput = document.getElementById('slugOutput');
+        const shortDesc = document.getElementById('shortDescription');
+        const tagsInput = document.getElementById('tags');
+        const editForm = document.getElementById('editForm');
+        const messageDiv = document.getElementById('message');
+        const loadingMessage = document.getElementById('loadingMessage');
+
+        // Get slug from URL path
+        const pathParts = window.location.pathname.split('/');
+        const articleSlug = pathParts[pathParts.length - 1];
+
+        function generateSlug(text) {
+            return text
+                .toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/[^\w-]+/g, '')
+                .replace(/--+/g, '-');
+        }
+
+        titleInput.addEventListener('input', () => {
+            const title = titleInput.value;
+            const slug = generateSlug(title);
+            slugOutput.textContent = slug;
+        });
+
+        // Load existing article data
+        async function loadArticle() {
+            try {
+                const response = await fetch(`/api/articles/${articleSlug}`, {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to load article');
+                }
+
+                const article = await response.json();
+                
+                // Populate form fields
+                titleInput.value = article.title;
+                shortDesc.value = article.short_description || '';
+                tagsInput.value = article.tags || '';
+                slugOutput.textContent = article.slug;
+
+                // Show form, hide loading message
+                loadingMessage.style.display = 'none';
+                editForm.style.display = 'block';
+
+            } catch (error) {
+                loadingMessage.textContent = 'Erro ao carregar artigo: ' + error.message;
+                loadingMessage.style.color = 'red';
+            }
+        }
+
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            messageDiv.style.display = 'none';
+            messageDiv.className = 'message';
+
+            const formData = new FormData(editForm);
+
+            try {
+                const response = await fetch(`/api/articles/${articleSlug}`, {
+                    method: 'PUT',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageDiv.classList.add('success');
+                    messageDiv.textContent = data.message;
+                    // Redirect to the article page (using new slug if title changed)
+                    const newSlug = data.article?.slug || articleSlug;
+                    setTimeout(() => {
+                        window.location.href = `/p/${newSlug}`;
+                    }, 1500);
+                } else {
+                    messageDiv.classList.add('error');
+                    messageDiv.textContent = data.error || 'Ocorreu um erro ao atualizar o artigo.';
+                }
+            } catch (error) {
+                messageDiv.classList.add('error');
+                messageDiv.textContent = 'Erro de conexão ou rede: ' + error.message;
+            } finally {
+                messageDiv.style.display = 'block';
+            }
+        });
+
+        // Load article on page load
+        loadArticle();
+
+        // Auth widget handled by /js/auth_widget.js
+    </script>
+</body>
+
+</html>

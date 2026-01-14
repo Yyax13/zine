@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="../css/css-others/wa.css">
+    <title>wallpapers — pwn</title>
+    <link rel="shortcut icon" href="../img/favicon.png" type="image/x-icon">
+    <script defer src="/js/zoom_wallpapers.js"></script>
+    <script src="/js/auth_widget.js" defer></script>
+    <script src="/js/glitch.js"></script>
+    <script src="/js/newtab.js"></script>
+    <script src="/js/site_config.js" defer></script>
+    <script src="/js/footer_domain.js" defer></script>
+</head>
+
+<body>
+    <div class="main_container">
+        <header class="header">
+            <div class="left-section">
+                <a href="/" class="menu-link">/home</a>
+                <a href="/p" class="menu-link">/papers</a>
+                <a href="/a/about-me" class="menu-link">/about-me</a>
+            </div>
+            <div class="right-section">
+                <span class="glitch-text">pwn@buff3r</span>
+            </div>
+
+        </header>
+
+        <main class="content">
+            <h1 class="pwntitle">~/Wallpapers</h1>
+            <div class="gallery" id="gallery">
+                <p class="loading">Carregando wallpapers...</p>
+            </div>
+            <div id="pwnModal" class="modal">
+                <span class="close">&times;</span>
+
+                <div class="modal-inner">
+                    <img class="modal-content" id="imgModal">
+
+                    <div class="modal-votes">
+                        <span class="vote upvote vote-disabled" id="modalUp">▲</span>
+                        <span class="votesum" id="modalVoteSum">+0</span>
+                        <span class="vote downvote vote-disabled" id="modalDown">▼</span>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <a href="/" class="back-link">← Voltar para a página principal</a>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <span class="site-copyright">&copy; 2026 - pwnbuffer.org </span>
+                <span class="footer-separator">|</span>
+                <a href="/a/wallpapers" target="_blank" class="footer-link">[ Wallpapers ] </a>
+                <span class="footer-separator">|</span>
+                <a href="https://discord.gg/pwnbuffer" target="_blank" class="footer-link">[ Servidor Discord ] </a>
+            </div>
+        </footer>
+    </div>
+
+</body>
+
+<script>
+// Fetch wallpapers from server API and populate the gallery
+document.addEventListener('DOMContentLoaded', async () => {
+    let canVoteGlobal = false;
+
+    try {
+        const meRes = await fetch('/api/me');
+        if (meRes.ok) {
+            const meData = await meRes.json();
+            canVoteGlobal = meData?.user?.worm !== true;
+        }
+    } catch (e) {
+        canVoteGlobal = false;
+    }
+
+    const modalUp = document.getElementById('modalUp');
+    const modalDown = document.getElementById('modalDown'); 
+    const modalVoteSum = document.getElementById('modalVoteSum');
+
+    async function vote(val) {
+        if (!canVoteGlobal || !currentSlug) return;
+
+        try {
+            const r = await fetch(
+                `/api/files/${encodeURIComponent(currentSlug)}/vote`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ value: val })
+                }
+            );
+
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) return;
+
+            const net = j.upvotes - j.downvotes;
+            modalVoteSum.textContent = net >= 0 ? `+${net}` : `${net}`;
+
+            const img = gallery.querySelector(`img[data-slug="${currentSlug}"]`);
+            if (img) {
+                img.dataset.up = j.upvotes;
+                img.dataset.down = j.downvotes;
+            }
+        } catch (e) {
+            console.error('vote error', e);
+        }
+    }
+
+    modalUp.addEventListener('click', () => vote(1));
+    modalDown.addEventListener('click', () => vote(-1));
+
+
+    let currentSlug = null;
+
+    function openModal(img) {
+        modal.style.display = 'block';
+        modalImg.src = img.src;
+
+        currentSlug = img.dataset.slug;
+
+        const up = Number(img.dataset.up || 0);
+        const down = Number(img.dataset.down || 0);
+        const net = up - down;
+        modalVoteSum.textContent = net >= 0 ? `+${net}` : `${net}`;
+
+        if (canVoteGlobal) {
+            modalUp.classList.remove('vote-disabled');
+            modalDown.classList.remove('vote-disabled');
+        } else {
+            modalUp.classList.add('vote-disabled');
+            modalDown.classList.add('vote-disabled');
+        }
+    }
+
+
+    const gallery = document.getElementById('gallery');
+    const modal = document.getElementById('pwnModal');
+    const modalImg = document.getElementById('imgModal');
+
+    function clearGalleryMessage() {
+        const p = gallery.querySelector('.loading') || gallery.querySelector('.error');
+        if (p) p.remove();
+    }
+
+    function showError(msg) {
+        clearGalleryMessage();
+        const err = document.createElement('p');
+        err.className = 'error';
+        err.textContent = msg;
+        gallery.appendChild(err);
+    }
+
+    try {
+        const res = await fetch('/api/wallpapers');
+        if (!res.ok) {
+            throw new Error(`Server returned ${res.status}`);
+        }
+        
+        const items = await res.json();
+        clearGalleryMessage();
+
+        if (!Array.isArray(items) || items.length === 0) {
+            showError('Nenhum wallpaper encontrado.');
+            return;
+        }
+
+        // Create image elements with vote controls
+        items.forEach(item => {
+            const src = item.link ? item.link : `/f/${encodeURIComponent(item.slug)}`;
+
+            const container = document.createElement('div');
+            container.className = 'wallpaper-item';
+
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = item.title || item.slug || '';
+            img.loading = 'lazy';
+            img.dataset.slug = item.slug;
+            img.dataset.up = item.upvotes || 0;
+            img.dataset.down = item.downvotes || 0;
+
+            img.addEventListener('click', () => {
+                openModal(img);
+            });
+
+            container.appendChild(img);
+            gallery.appendChild(container);
+        });
+    } catch (e) {
+        console.error('Error fetching wallpapers:', e);
+        showError('Erro ao carregar wallpapers. Tente novamente mais tarde.');
+    }
+});
+</script>
+
+</html>

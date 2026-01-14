@@ -1,0 +1,12 @@
+.vscode*
+
+site/node_modules*
+site/.env
+site/package-lock*
+
+pg-docker/postgresql/__pycache__*
+pg-docker/postgresql/initdb*
+pg-docker/postgresql/initdb/*
+pg-docker/postgresql/.env*
+pg-docker/postgresql/.passwords*
+pg-docker/postgresql/docker-compose.yml*

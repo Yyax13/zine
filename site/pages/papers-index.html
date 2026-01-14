@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="../css/css-others/p.css">
+    <title>papers — pwn</title>
+    <link rel="shortcut icon" href="../img/favicon.png" type="image/x-icon">
+    <!-- external Google font removed; site uses local gohu via css -->
+    <script src="/js/auth_widget.js" defer></script>
+    <script src="/js/glitch.js"></script>
+    <script src="/js/newtab.js"></script>
+    <script src="/js/site_config.js" defer></script>
+    <script src="/js/footer_domain.js" defer></script>
+
+</head>
+
+<body>
+    <div class="main_container">
+        <header class="header">
+            <div class="left-section">
+                <a href="/" class="menu-link">/home</a>
+                <a href="/p" class="menu-link">/papers</a>
+                <a href="/a/about-me" class="menu-link">/about-me</a>
+            </div>
+            <div class="right-section">
+                <span class="glitch-text">pwn@buff3r</span>
+            </div>
+
+        </header>
+
+        <main class="content">
+            <h1 class="pwntitle">~/papers</h1>
+
+
+            <div class="search-bar" style="margin-bottom: 10px;">
+                <input id="searchInput" type="search" style="width: 15em;" placeholder="Buscar por título...">
+                <button id="searchBtn" class="aw-btn">Buscar</button>
+            </div>
+
+            <div class="list-papers">
+                <ul id="articlesContainer" class="papers-grid"></ul>
+            </div>
+
+
+            <a href="/" class="back-link">← Voltar para a página principal</a>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <span class="site-copyright">&copy; 2026 - pwnbuffer.org </span>
+                <span class="footer-separator">|</span>
+                <a href="/a/wallpapers" target="_blank" class="footer-link">[ Wallpapers ] </a>
+                <span class="footer-separator">|</span>
+                <a href="https://discord.gg/pwnbuffer" target="_blank" class="footer-link">[ Servidor Discord ] </a>
+            </div>
+        </footer>
+    </div>
+
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        let canVoteGlobal = false;
+
+        let isWorm = false;
+        try {
+            const meRes = await fetch('/api/me');
+            if (meRes.ok) {
+                const meData = await meRes.json();
+                isWorm = meData?.user?.worm === true;
+                canVoteGlobal = !isWorm;
+            }
+        } catch (e) {
+            canVoteGlobal = false;
+        }
+
+
+        const articlesContainer = document.getElementById('articlesContainer');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+
+        async function loadArticles(q = '', tag = '') {
+            articlesContainer.innerHTML = '<p style="text-align:center;color:var(--secondary-text-color);">Carregando...</p>';
+            try {
+                const params = new URLSearchParams();
+                if (q) params.set('q', q);
+                if (tag) params.set('tag', tag);
+                const response = await fetch('/api/articles/search?' + params.toString());
+                if (!response.ok) throw new Error('Erro ao buscar artigos');
+                const articles = await response.json();
+                articlesContainer.innerHTML = '';
+                if (!articles || articles.length === 0) {
+                    articlesContainer.innerHTML = '<p style="text-align:center;color:var(--secondary-text-color);">Nenhum artigo encontrado.</p>';
+                    return;
+                }
+
+                articles.forEach((article, ind) => {
+                    const tagsArr = article.Tags || article.tags || [];
+                    const tagsLine = (tagsArr && tagsArr.length > 0)
+                        ? tagsArr.map(t => `<a href="#" class="tag" data-tag="${t.name}">${t.name}</a>`).join(' - ')
+                        : '';
+
+                    const up = article.upvotes || 0;
+                    const down = article.downvotes || 0;
+                    const indexHex = '0x' + Number(ind + 1).toString(16).toUpperCase().padStart(2, '0');
+
+                    const net = (up - down);
+                    const netLabel = (net >= 0 ? `+${net}` : `${net}`);
+                    const canVote = canVoteGlobal === true; // backend decide
+
+                    const card = `
+                    <li class="paper-card" data-slug="${article.slug}">
+                        <span class="paper-index">${indexHex}</span>
+
+                        <div class="card-body">
+                            <a class="paper-title" href="../p/${article.slug}">
+                                ${article.title}
+                            </a>
+
+                            <div class="card-meta">
+                                <span class="paper-author">${article.User?.userName || 'unknown'}</span>
+                                <span class="paper-date">${article.createdAt.split('T')[0]}</span>
+                            </div>
+
+                            ${tagsLine ? `
+                                <div class="paper-tags">
+                                    ${tagsArr.map(t => `
+                                        <a href="#" class="tag badge" data-tag="${t.name}">
+                                            ${t.name}
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="card-votes">
+                            <span class="vote upvote ${canVote ? '' : 'vote-disabled'}"
+                                data-slug="${article.slug}"
+                                data-enabled="${canVote}"
+                                data-tooltip="${canVote ? "Upvote" : `Você não pode votar (${isWorm ? "worms não podem votar" : "não autenticado"})`}">
+                                ▲
+                            </span>
+
+                            <span class="votesum" data-up="${up}" data-down="${down}">
+                                ${netLabel}
+                            </span>
+
+                            <span class="vote downvote ${canVote ? '' : 'vote-disabled'}"
+                                data-slug="${article.slug}"
+                                data-enabled="${canVote}"
+                                data-tooltip="${canVote ? "Downvote" : `Você não pode votar (${isWorm ? "worms não podem votar" : "não autenticado"})`}"">
+                                ▼
+                            </span>
+                        </div>
+                    </li>
+                    `;
+
+                    articlesContainer.insertAdjacentHTML('beforeend', card);
+                });
+
+                articlesContainer.querySelectorAll('.tag').forEach(el => {
+                    el.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        const t = el.dataset.tag;
+                        searchInput.value = '';
+                        loadArticles('', t);
+                    });
+                });
+
+                // attach vote handlers (update votesum after response)
+                articlesContainer.querySelectorAll('.upvote, .downvote').forEach(btn => {
+                    btn.addEventListener('click', async (ev) => {
+                        ev.preventDefault();
+
+                        if (btn.dataset.enabled !== 'true') {
+                            return;
+
+                        }
+
+                        const isUp = btn.classList.contains('upvote');
+                        const slug = btn.dataset.slug;
+
+                        try {
+                            const r = await fetch(`/api/articles/${encodeURIComponent(slug)}/vote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: isUp ? 1 : -1 }) });
+                            const j = await r.json().catch(() => ({}));
+                            if (!r.ok) { alert(j.error || 'Vote failed'); return; }
+                            const li = btn.closest('li');
+                            if (li) {
+                                const votesumEl = li.querySelector('.votesum');
+                                if (votesumEl) {
+                                    const up = j.upvotes || 0;
+                                    const down = j.downvotes || 0;
+                                    votesumEl.dataset.up = up;
+                                    votesumEl.dataset.down = down;
+                                    const net = up - down;
+                                    votesumEl.textContent = (net >= 0 ? `+${net}` : `${net}`);
+                                }
+                            }
+                        } catch (e) { console.error('vote error', e); alert('Vote failed'); }
+                    });
+                });
+
+            } catch (err) {
+                console.error(err);
+                articlesContainer.innerHTML = '<p style="text-align:center;color:#A70000;">Não foi possível carregar os artigos.</p>';
+            }
+        }
+
+        searchBtn.addEventListener('click', () => loadArticles(searchInput.value.trim()));
+        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); loadArticles(searchInput.value.trim()); } });
+
+        // initial load
+        loadArticles();
+    });
+</script>
+
+</html>

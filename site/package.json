@@ -1,0 +1,50 @@
+{
+  "name": "papers",
+  "version": "1.0.0",
+  "description": "by hoWo the Lammer",
+  "homepage": "https://github.com/Yyax13/Papers#readme",
+  "bugs": {
+    "url": "https://github.com/Yyax13/Papers/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yyax13/Papers.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon --config .nodemon.config.json",
+    "seed": "node seed.mjs"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "@libsql/sqlite3": "^0.3.1",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "file-type": "^21.0.0",
+    "jose": "^6.1.0",
+    "mermaid": "^11.10.1",
+    "multer": "^2.0.2",
+    "pg": "^8.16.3",
+    "playwright": "^1.55.0",
+    "rehype-highlight": "^7.0.2",
+    "rehype-mermaid": "^3.0.0",
+    "rehype-stringify": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "sequelize": "^6.37.7",
+    "sharp": "^0.34.4",
+    "slugify": "^1.6.6",
+    "unified": "^11.0.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

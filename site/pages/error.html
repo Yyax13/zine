@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>Error</title>
+	<link rel="stylesheet" href="/css/style.css">
+	<script src="/js/glitch.js"></script>
+	<script src="/js/newtab.js"></script>
+	<script src="/js/footer_domain.js" defer></script>
+	<style>
+	/* small local tweaks for the error page to match site style */
+	
+	.error_card {
+		max-width: 900px;
+		margin: 6vh auto;
+		padding: 2.25rem;
+		border-radius: 8px;
+		box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+		text-align: center;
+	}
+	.error_code {
+		font-family: 'gohu', sans-serif;
+		font-size: 3.75rem;
+		letter-spacing: 1px;
+		margin: 0 0 0.5rem 0;
+		color: var(--accent, #a7000a);
+	}
+	.error_message {
+		margin: 0 0 1.25rem 0;
+		font-size: 1.125rem;
+		color: #ddd;
+	}
+	.error_help {
+		color: #aaa;
+		font-size: 0.95rem;
+		margin-top: 0.5rem;
+	}
+	.error_actions a {
+		display: inline-block;
+		margin: 0.5rem 0.5rem 0 0.5rem;
+		padding: 0.5rem 0.9rem;
+		border-radius: 5px;
+		text-decoration: none;
+		color: inherit;
+		background: rgba(29, 29, 29, 0.562);
+		border: 1px solid rgba(255,255,255,0.04);
+		transition: all 0.2s ease-in-out;
+	}
+
+	.error_actions a:hover {
+		background: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.25);
+		box-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
+		transform: translateY(-2px);
+	}
+	</style>
+</head>
+<body>
+	<div class="main_container">
+		<div class="error_card" role="alert" aria-labelledby="error-title">
+			<h1 id="error-title" class="error_code">__insert_error_code_here</h1>
+			<p class="error_message">__insert_error_message_here</p>
+
+			<img src="/img/free.gif" alt="freebsd-daemon" width="250px">
+
+			<div class="error_help">Se você acha que isso é um erro, tente atualizar ou entre em contato com o administrador do site.</div>
+
+			<div class="error_actions" style="margin-top:1.25rem;">
+				<a href="/" title="Go to homepage">Home</a>
+				<a href="/p/" title="Browse papers">Papers</a>
+				<a href="#" onclick="location.reload();return false;">Reload</a>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
