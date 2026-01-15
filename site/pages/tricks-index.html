@@ -5,9 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="../css/css-others/p.css">
-    <title>papers — pwn</title>
+    <title>tricks — pwn</title>
     <link rel="shortcut icon" href="../img/favicon.png" type="image/x-icon">
-    <!-- external Google font removed; site uses local gohu via css -->
     <script src="/js/auth_widget.js" defer></script>
     <script src="/js/glitch.js"></script>
     <script src="/js/newtab.js"></script>
@@ -34,7 +33,7 @@
         </header>
 
         <main class="content">
-            <h1 class="pwntitle">~/papers</h1>
+            <h1 class="pwntitle">~/tricks</h1>
 
 
             <div class="search-bar" style="margin-bottom: 10px;">
@@ -43,7 +42,7 @@
             </div>
 
             <div class="list-papers">
-                <ul id="articlesContainer" class="papers-grid"></ul>
+                <ul id="tricksContainer" class="papers-grid"></ul>
             </div>
 
 
@@ -79,51 +78,51 @@
         }
 
 
-        const articlesContainer = document.getElementById('articlesContainer');
+        const tricksContainer = document.getElementById('tricksContainer');
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
 
-        async function loadArticles(q = '', tag = '') {
-            articlesContainer.innerHTML = '<p style="text-align:center;color:var(--secondary-text-color);">Carregando...</p>';
+        async function loadTricks(q = '', tag = '') {
+            tricksContainer.innerHTML = '<p style="text-align:center;color:var(--secondary-text-color);">Carregando...</p>';
             try {
                 const params = new URLSearchParams();
                 if (q) params.set('q', q);
                 if (tag) params.set('tag', tag);
-                const response = await fetch('/api/articles/search?' + params.toString());
-                if (!response.ok) throw new Error('Erro ao buscar artigos');
-                const articles = await response.json();
-                articlesContainer.innerHTML = '';
-                if (!articles || articles.length === 0) {
-                    articlesContainer.innerHTML = '<p style="text-align:center;color:var(--secondary-text-color);">Nenhum artigo encontrado.</p>';
+                const response = await fetch('/api/tricks/search?' + params.toString());
+                if (!response.ok) throw new Error('Erro ao buscar tricks');
+                const tricks = await response.json();
+                tricksContainer.innerHTML = '';
+                if (!tricks || tricks.length === 0) {
+                    tricksContainer.innerHTML = '<p style="text-align:center;color:var(--secondary-text-color);">Nenhum trick encontrado.</p>';
                     return;
                 }
 
-                articles.forEach((article, ind) => {
-                    const tagsArr = article.Tags || article.tags || [];
+                tricks.forEach((trick, ind) => {
+                    const tagsArr = trick.Tags || trick.tags || [];
                     const tagsLine = (tagsArr && tagsArr.length > 0)
                         ? tagsArr.map(t => `<a href="#" class="tag" data-tag="${t.name}">${t.name}</a>`).join(' - ')
                         : '';
 
-                    const up = article.upvotes || 0;
-                    const down = article.downvotes || 0;
+                    const up = trick.upvotes || 0;
+                    const down = trick.downvotes || 0;
                     const indexHex = '0x' + Number(ind + 1).toString(16).toUpperCase().padStart(2, '0');
 
                     const net = (up - down);
                     const netLabel = (net >= 0 ? `+${net}` : `${net}`);
-                    const canVote = canVoteGlobal === true; // backend decide
+                    const canVote = canVoteGlobal === true;
 
                     const card = `
-                    <li class="paper-card" data-slug="${article.slug}">
+                    <li class="paper-card" data-slug="${trick.slug}">
                         <span class="paper-index">${indexHex}</span>
 
                         <div class="card-body">
-                            <a class="paper-title" href="../p/${article.slug}">
-                                ${article.title}
+                            <a class="paper-title" href="../t/${trick.slug}">
+                                ${trick.title}
                             </a>
 
                             <div class="card-meta">
-                                <span class="paper-author">${article.User?.userName || 'unknown'}</span>
-                                <span class="paper-date">${article.createdAt.split('T')[0]}</span>
+                                <span class="paper-author">${trick.User?.userName || 'unknown'}</span>
+                                <span class="paper-date">${trick.createdAt.split('T')[0]}</span>
                             </div>
 
                             ${tagsLine ? `
@@ -139,7 +138,7 @@
 
                         <div class="card-votes">
                             <span class="vote upvote ${canVote ? '' : 'vote-disabled'}"
-                                data-slug="${article.slug}"
+                                data-slug="${trick.slug}"
                                 data-enabled="${canVote}"
                                 data-tooltip="${canVote ? "Upvote" : `Você não pode votar (${isWorm ? "worms não podem votar" : "não autenticado"})`}">
                                 ▲
@@ -150,7 +149,7 @@
                             </span>
 
                             <span class="vote downvote ${canVote ? '' : 'vote-disabled'}"
-                                data-slug="${article.slug}"
+                                data-slug="${trick.slug}"
                                 data-enabled="${canVote}"
                                 data-tooltip="${canVote ? "Downvote" : `Você não pode votar (${isWorm ? "worms não podem votar" : "não autenticado"})`}"">
                                 ▼
@@ -159,20 +158,20 @@
                     </li>
                     `;
 
-                    articlesContainer.insertAdjacentHTML('beforeend', card);
+                    tricksContainer.insertAdjacentHTML('beforeend', card);
                 });
 
-                articlesContainer.querySelectorAll('.tag').forEach(el => {
+                tricksContainer.querySelectorAll('.tag').forEach(el => {
                     el.addEventListener('click', (ev) => {
                         ev.preventDefault();
                         const t = el.dataset.tag;
                         searchInput.value = '';
-                        loadArticles('', t);
+                        loadTricks('', t);
                     });
                 });
 
                 // attach vote handlers (update votesum after response)
-                articlesContainer.querySelectorAll('.upvote, .downvote').forEach(btn => {
+                tricksContainer.querySelectorAll('.upvote, .downvote').forEach(btn => {
                     btn.addEventListener('click', async (ev) => {
                         ev.preventDefault();
 
@@ -185,7 +184,7 @@
                         const slug = btn.dataset.slug;
 
                         try {
-                            const r = await fetch(`/api/articles/${encodeURIComponent(slug)}/vote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: isUp ? 1 : -1 }) });
+                            const r = await fetch(`/api/tricks/${encodeURIComponent(slug)}/vote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: isUp ? 1 : -1 }) });
                             const j = await r.json().catch(() => ({}));
                             if (!r.ok) { alert(j.error || 'Vote failed'); return; }
                             const li = btn.closest('li');
@@ -206,15 +205,15 @@
 
             } catch (err) {
                 console.error(err);
-                articlesContainer.innerHTML = '<p style="text-align:center;color:#A70000;">Não foi possível carregar os artigos.</p>';
+                tricksContainer.innerHTML = '<p style="text-align:center;color:#A70000;">Não foi possível carregar os tricks.</p>';
             }
         }
 
-        searchBtn.addEventListener('click', () => loadArticles(searchInput.value.trim()));
-        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); loadArticles(searchInput.value.trim()); } });
+        searchBtn.addEventListener('click', () => loadTricks(searchInput.value.trim()));
+        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); loadTricks(searchInput.value.trim()); } });
 
         // initial load
-        loadArticles();
+        loadTricks();
     });
 </script>
 

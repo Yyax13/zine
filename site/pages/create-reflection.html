@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>criar reflection — pwn</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/css-others/u.css">
+    <link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
+    <script src="/js/auth_widget.js" defer></script>
+    <script src="/js/site_config.js" defer></script>
+    <script src="/js/footer_domain.js" defer></script>
+</head>
+
+<body>
+    <div class="main_container">
+        <header class="header">
+            <div class="left-section">
+                <a href="/" class="menu-link">/home</a>
+                <a href="/p" class="menu-link">/papers</a>
+                <a href="/t" class="menu-link">/tricks</a>
+                <a href="/r" class="menu-link">/reflections</a>
+                <a href="/a/about-me" class="menu-link">/about-me</a>
+            </div>
+            <div class="right-section">
+                <div id="authWidget" style="margin-bottom:12px"></div>
+                <span class="glitch-text">pwn@buff3r</span>
+            </div>
+
+        </header>
+
+        <main class="content">
+            <div class="upload-container">
+                <h2>Criar Reflection</h2>
+                <div id="authWidget" style="margin-bottom:12px"></div>
+                <form id="createReflectionForm">
+                    <label for="title">Título</label>
+                    <input type="text" id="title" name="title" maxlength="120" placeholder="Título da reflexão" required>
+
+                    <div class="slug-preview">slug: <span id="slugOutput"></span><br></div>
+
+                    <br><label for="language">Idioma (ISO)</label>
+                    <input id="language" name="language" placeholder="pt-BR" value="pt-BR">
+
+                    <br><label for="content">Conteúdo (texto puro)</label>
+                    <textarea id="content" name="content" placeholder="Escreva a reflexão em texto puro..." rows="12" required></textarea>
+
+                    <button type="submit" class="aw-btn">Criar Reflection</button>
+                </form>
+
+                <div id="msg" class="message" style="display:none"></div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <span class="site-copyright">&copy; 2026 - pwnbuffer.org </span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const titleInput = document.getElementById('title');
+        const slugOutput = document.getElementById('slugOutput');
+        const createForm = document.getElementById('createReflectionForm');
+        const messageDiv = document.getElementById('msg');
+
+        function generateSlug(text) {
+            return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-');
+        }
+
+        titleInput.addEventListener('input', () => {
+            const title = titleInput.value;
+            const slug = generateSlug(title);
+            slugOutput.textContent = slug;
+        });
+
+        createForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            messageDiv.style.display = 'none';
+            messageDiv.className = 'message';
+
+            const title = titleInput.value.trim();
+            const content = document.getElementById('content').value.trim();
+            const language = document.getElementById('language').value.trim() || 'pt-BR';
+
+            if (!title || !content) {
+                messageDiv.classList.add('error');
+                messageDiv.textContent = 'Título e conteúdo são obrigatórios.';
+                messageDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const body = { title, content, language };
+                const res = await fetch('/api/reflections', { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    messageDiv.classList.add('error');
+                    messageDiv.textContent = data.error || 'Ocorreu um erro ao criar a reflexão.';
+                    messageDiv.style.display = 'block';
+                    return;
+                }
+                messageDiv.classList.add('success');
+                messageDiv.textContent = data.message || 'Reflection criado com sucesso';
+                messageDiv.style.display = 'block';
+                const slug = data.reflection?.slug || generateSlug(title);
+                setTimeout(() => { window.location.href = '/r/' + slug; }, 700);
+            } catch (err) {
+                messageDiv.classList.add('error');
+                messageDiv.textContent = 'Erro de conexão ou rede: ' + (err.message || err);
+                messageDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

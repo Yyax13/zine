@@ -203,16 +203,22 @@
         if (currentUser.worm) {
             const uploadFileBtn = el('button', { class: 'aw-btn', text: 'Upload file' });
             const uploadPaperBtn = el('button', { class: 'aw-btn', text: 'Upload paper' });
+            const createTrickBtn = el('button', { class: 'aw-btn', text: 'Create trick' });
+            const createReflectionBtn = el('button', { class: 'aw-btn', text: 'Create reflection' });
             const createWormBtn = el('button', { class: 'aw-btn', text: 'Create worm' });
 
             // Redirect to upload routes instead of opening modal
             uploadFileBtn.addEventListener('click', () => { window.location.href = '/u/file'; });
             uploadPaperBtn.addEventListener('click', () => { window.location.href = '/u/papers'; });
+            createTrickBtn.addEventListener('click', () => { window.location.href = '/u/tricks'; });
+            createReflectionBtn.addEventListener('click', () => { window.location.href = '/u/reflections'; });
             // Open inline form to create another worm
             createWormBtn.addEventListener('click', () => openCreateWormForm());
 
             popover.appendChild(uploadFileBtn);
             popover.appendChild(uploadPaperBtn);
+            popover.appendChild(createTrickBtn);
+            popover.appendChild(createReflectionBtn);
             popover.appendChild(createWormBtn);
         }
 

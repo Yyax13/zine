@@ -1,20 +1,23 @@
 import "dotenv/config"
 import e from 'express';
-import { articleViewer } from './reqhandler.js';
+import { articleViewer, trickViewer } from './reqhandler.js';
 import { uploadArticle, updateArticle } from './uploadhandler.js';
-import { all, lastest, wallpapers, searchArticles, voteArticle, voteFile, getArticle } from "./api.js";
-import { getFromStorage, insertIntoStorage } from "./storage.js";
+import { createTrick, updateTrick } from './trickhandler.js';
+import { all, lastest, wallpapers, searchArticles, voteArticle, voteFile, getArticle, getTricks, searchTricks, getTrick, voteTrick, getReflections, getReflection, createReflection } from "./api.js";
+import { getFromStorage, insertIntoStorage, attachTrickBinary } from "./storage.js";
 import errorPage from "../modules/error.js";
 import cookieParser from 'cookie-parser'
 import { register, login, logout, requireAuth, verifyWorm, registerWorm } from './auth.js'
 import path from 'path'
 import { __dirname } from "../server.js";
 import { me } from './auth.js';
+import { reflectionViewer } from "./reflectionHandler.js";
 
 const routes = e.Router()
 routes.use(cookieParser())
 
 routes.get("/p/:slug", articleViewer);
+routes.get("/t/:slug", trickViewer);
 // Auth endpoints
 routes.post('/api/register', register)
 routes.post('/api/login', login)
@@ -32,6 +35,18 @@ routes.put("/api/articles/:slug", requireAuth, verifyWorm, updateArticle);
 // voting: authenticated non-worm users can vote
 routes.post('/api/articles/:slug/vote', requireAuth, voteArticle);
 routes.post('/api/files/:slug/vote', requireAuth, voteFile);
+// Trick endpoints
+routes.get('/api/tricks', getTricks);
+routes.get('/api/tricks/search', searchTricks);
+routes.post("/api/tricks", requireAuth, verifyWorm, createTrick);
+routes.get("/api/tricks/:slug", requireAuth, getTrick);
+routes.put("/api/tricks/:slug", requireAuth, verifyWorm, updateTrick);
+routes.post('/api/tricks/:slug/vote', requireAuth, voteTrick);
+routes.post('/api/tricks/:slug/attach', requireAuth, verifyWorm, attachTrickBinary);
+// Reflection API
+routes.get('/api/reflections', getReflections);
+routes.get('/api/reflections/:slug', requireAuth, getReflection);
+routes.post('/api/reflections', requireAuth, verifyWorm, createReflection);
 // File endpoints
 routes.post('/api/files', requireAuth, verifyWorm, insertIntoStorage);
 routes.get('/api/wallpapers', wallpapers);
@@ -60,6 +75,33 @@ routes.get('/u/file', requireAuth, verifyWorm, (req, res) => {
 
 routes.get('/p', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'papers-index.html'));
+
+});
+
+routes.get('/t', (req, res) => {
+    res.sendFile(path.join(__dirname, 'pages', 'tricks-index.html'));
+
+});
+
+routes.get('/r', (req, res) => {
+    res.sendFile(path.join(__dirname, 'pages', 'reflections-index.html'));
+
+});
+
+routes.get('/r/:slug', reflectionViewer);
+
+routes.get('/u/reflections', requireAuth, verifyWorm, (req, res) => {
+    res.sendFile(path.join(__dirname, 'pages', 'create-reflection.html'));
+
+});
+
+routes.get('/u/tricks', requireAuth, verifyWorm, (req, res) => {
+    res.sendFile(path.join(__dirname, 'pages', 'create-trick.html'));
+
+});
+
+routes.get('/u/tricks/:slug', requireAuth, verifyWorm, (req, res) => {
+    res.sendFile(path.join(__dirname, 'pages', 'edit-trick.html'));
 
 });
 

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>criar trick — pwn</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/css-others/u.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
+    <script src="/js/auth_widget.js" defer></script>
+    <script src="/js/glitch.js"></script>
+    <script src="/js/newtab.js"></script>
+    <script src="/js/site_config.js" defer></script>
+    <script src="/js/footer_domain.js" defer></script>
+</head>
+
+<body>
+    <div class="main_container">
+        <header class="header">
+            <div class="left-section">
+                <a href="/" class="menu-link">/home</a>
+                <a href="/p" class="menu-link">/papers</a>
+                <a href="/t" class="menu-link">/tricks</a>
+                <a href="/r" class="menu-link">/reflections</a>
+                <a href="/a/about-me" class="menu-link">/about-me</a>
+            </div>
+            <div class="right-section">
+                <div id="authWidget" style="margin-bottom:12px"></div>
+                <span class="glitch-text">pwn@buff3r</span>
+            </div>
+
+        </header>
+
+        <main class="content">
+            <div class="upload-container">
+                <h2>Criar Trick</h2>
+                <form id="createTrickForm">
+                    <label for="title">Título</label>
+                    <input type="text" id="title" name="title" maxlength="75" placeholder="Digite o título..." required>
+
+                    <div class="slug-preview">slug: <span id="slugOutput"></span><br></div>
+
+                    <br><label for="short_description">Resumo curto</label>
+                    <input id="short_description" name="short_description" placeholder="Resumo curto...">
+
+                    <br><label for="tags">Tags (vírgula separadas)</label>
+                    <input type="text" id="tags" name="tags" placeholder="ex: segurança,exploit,crypto">
+
+                    <br><label for="content">Conteúdo (markdown)</label>
+                    <textarea id="content" name="content" placeholder="Escreva o trick em markdown..." rows="12" required></textarea>
+
+                    <br><label for="trick_file">Arquivo binário / utilitário (opcional)</label>
+                    <input type="file" id="trick_file" name="trick_file" accept="*/*">
+
+                    <button type="submit" class="aw-btn">Criar</button>
+                </form>
+
+                <div id="msg" class="message" style="display:none"></div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <span class="site-copyright">&copy; 2026 - pwnbuffer.org </span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const titleInput = document.getElementById('title');
+    const slugOutput = document.getElementById('slugOutput');
+    const shortDesc = document.getElementById('short_description');
+    const createForm = document.getElementById('createTrickForm');
+    const messageDiv = document.getElementById('msg');
+
+    if (!createForm) {
+        console.error('createTrickForm não encontrado');
+        return;
+    }
+
+    function generateSlug(text) {
+        return text
+            .toString()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/[^\w-]+/g, '')
+            .replace(/--+/g, '-');
+    }
+
+    titleInput.addEventListener('input', () => {
+        const title = titleInput.value;
+        slugOutput.textContent = generateSlug(title);
+
+        if (!shortDesc.value) {
+            shortDesc.value = `Trick sobre ${title}`;
+        }
+    });
+
+    createForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        messageDiv.style.display = 'none';
+        messageDiv.className = 'message';
+
+        const title = titleInput.value.trim();
+        const content = document.getElementById('content').value.trim();
+        const short_description = shortDesc.value.trim();
+        const tags = document.getElementById('tags').value.trim();
+
+        if (!title || !content) {
+            messageDiv.classList.add('error');
+            messageDiv.textContent = 'Título e conteúdo são obrigatórios.';
+            messageDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            const body = { title, content, short_description, tags };
+
+            console.log('enviando:', body);
+
+            const res = await fetch('/api/tricks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(body)
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            console.log('status:', res.status, data);
+
+            if (!res.ok) {
+                messageDiv.classList.add('error');
+                messageDiv.textContent = data.error || 'Erro ao criar trick.';
+                messageDiv.style.display = 'block';
+                return;
+            }
+
+            messageDiv.classList.add('success');
+            messageDiv.textContent = 'Trick criado com sucesso';
+            messageDiv.style.display = 'block';
+
+            const slug = data.trick.slug;
+            setTimeout(() => {
+                window.location.href = `/u/tricks/${slug}`;
+            }, 700);
+
+        } catch (err) {
+            messageDiv.classList.add('error');
+            messageDiv.textContent = 'Erro de rede: ' + err.message;
+            messageDiv.style.display = 'block';
+        }
+    });
+
+});
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/css-paper/paper.css">
+    <link rel="stylesheet" href="/css/css-others/code.css">
+    <link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
+    <title>__insert_the_title_here - pwnbuffer.org</title>
+    <script src="/js/auth_widget.js" defer></script>
+    <script src="/js/glitch.js"></script>
+    <script src="/js/newtab.js"></script>
+    <script src="/js/site_config.js" defer></script>
+    <script src="/js/footer_domain.js" defer></script>
+</head>
+
+<body>
+    <div class="main_container">
+        <header class="header_top">
+            <div class="left-section">
+                <a href="/" class="menu-link">/home</a>
+                <a href="/p" class="menu-link">/papers</a>
+                <a href="/t" class="menu-link">/tricks</a>
+                <a href="/r" class="menu-link">/reflections</a>
+                <a href="/a/about-me" class="menu-link">/about-me</a>
+            </div>
+            <div class="right-section">
+                <div id="authWidget" style="margin-bottom:12px"></div>
+                <span class="glitch-text">pwn@buff3r</span>
+            </div>
+
+        </header>
+
+        <main class="content">
+            <h1 class="pwntitle">__insert_the_title_here</h1>
+            <div id="editButtonContainer" style="margin-bottom: 10px; display: none;">
+                <a href="/u/tricks/__insert_slug_here" class="edit-button" style="display: inline-block; padding: 8px 16px; background-color: #170d0d04; color: #fcf0f0; text-decoration: none; border-radius: 4px; border: 1px solid #b91313;">Editar</a>
+            </div>
+            <article>
+                    <p><code>Author:</code> __insert_author_here<br><code>Date:</code> __insert_date_here </p>
+                    <p class="paper-tags">__insert_tags_here</p>
+                    
+                    <hr>
+
+                  __insert_content_here
+            </article>
+            
+            <a href="/t" class="back-link">← Voltar para tricks</a>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <span class="site-copyright">&copy; 2026 - pwnbuffer.org </span>
+                <span class="footer-separator">|</span>
+                <a href="/a/wallpapers" target="_blank" class="footer-link">[ Wallpapers ] </a>
+                <span class="footer-separator">|</span>
+                <a href="https://discord.gg/pwnbuffer" target="_blank" class="footer-link">[ Servidor Discord ] </a>
+            </div>
+        </footer>
+    </div>
+
+</body>
+    <script>
+        // Check if user can edit this trick
+        (async () => {
+            try {
+                const meRes = await fetch('/api/me', { credentials: 'same-origin' });
+                if (meRes.ok) {
+                    const meData = await meRes.json();
+                    const isWorm = meData?.user?.worm === true;
+                    const currentUser = meData?.user?.userName;
+                    const trickAuthor = '__insert_author_here';
+                    
+                    // Show edit button if user is a worm and is the author
+                    if (isWorm && currentUser === trickAuthor) {
+                        document.getElementById('editButtonContainer').style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                // User not authenticated or error, don't show edit button
+            }
+        })();
+    </script>
+</html>

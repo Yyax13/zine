@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/css-others/p.css">
+    <title>reflections — pwn</title>
+    <link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
+    <script src="/js/auth_widget.js" defer></script>
+    <script src="/js/glitch.js"></script>
+    <script src="/js/newtab.js"></script>
+    <script src="/js/site_config.js" defer></script>
+    <script src="/js/footer_domain.js" defer></script>
+
+</head>
+
+<body>
+    <div class="main_container">
+        <header class="header">
+            <div class="left-section">
+                <a href="/" class="menu-link">/home</a>
+                <a href="/p" class="menu-link">/papers</a>
+                <a href="/t" class="menu-link">/tricks</a>
+                <a href="/r" class="menu-link">/reflections</a>
+                <a href="/a/about-me" class="menu-link">/about-me</a>
+            </div>
+            <div class="right-section">
+                <div id="authWidget" style="margin-bottom:12px"></div>
+                <span class="glitch-text">pwn@buff3r</span>
+            </div>
+
+        </header>
+
+        <main class="content">
+            <h1 class="pwntitle">~/reflections</h1>
+
+            <div class="list-papers">
+                <ul id="reflectionsContainer" class="papers-grid"></ul>
+            </div>
+
+            <a href="/" class="back-link">← Voltar para a página principal</a>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <span class="site-copyright">&copy; 2026 - pwnbuffer.org </span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const container = document.getElementById('reflectionsContainer');
+            container.innerHTML = '<p style="text-align:center;color:var(--secondary-text-color);">Carregando...</p>';
+            try {
+                const r = await fetch('/api/reflections');
+                if (!r.ok) throw new Error('Failed');
+                const list = await r.json();
+                container.innerHTML = '';
+                if (!list || list.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;color:var(--secondary-text-color);">Nenhuma reflexão encontrada.</p>';
+                    return;
+                }
+                list.forEach((it) => {
+                    const li = document.createElement('li');
+                    li.className = 'paper-card';
+                    li.innerHTML = `
+                        <div class="card-body">
+                            <a class="paper-title" href="/r/${it.slug}">${it.title}</a>
+                            <div class="card-meta"><span class="paper-author">${it.User?.userName || 'unknown'}</span>
+                            <span class="paper-date">${(it.createdAt||'').split ? (it.createdAt.split('T')[0]) : ''}</span></div>
+                        </div>`;
+                    container.appendChild(li);
+                });
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="text-align:center;color:#A70000;">Não foi possível carregar reflexões.</p>';
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -108,6 +108,113 @@ User.hasMany(Article, {
 
 })
 
+// Trick model for short Twitter-like posts
+const Trick = sequelize.define('Trick', {
+    slug: {
+        type: DataTypes.STRING,
+        unique: true,
+        allowNull: false,
+
+    },
+    title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+
+    },
+    content: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+
+    },
+    short_description: {
+        type: DataTypes.STRING,
+        allowNull: true,
+
+    },
+    author: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: {
+                tableName: 'User',
+                schema: process.env.PG_SCHEMA
+            },
+            key: 'id'
+        }
+    }
+}, {
+    timestamps: true,
+    schema: process.env.PG_SCHEMA,
+    tableName: 'Trick'
+
+});
+
+Trick.belongsTo(User, {
+    foreignKey: { name: 'author', allowNull: false },
+    targetKey: 'id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+
+})
+
+User.hasMany(Trick, {
+    foreignKey: { name: 'author', allowNull: false },
+    sourceKey: 'id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+
+})
+
+// Reflection model: plain text reflections (no markdown), multilingual support
+const Reflection = sequelize.define('Reflection', {
+    slug: {
+        type: DataTypes.STRING,
+        unique: true,
+        allowNull: false
+    },
+    title: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    content: {
+        type: DataTypes.TEXT,
+        allowNull: false
+    },
+    language: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    author: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: {
+                tableName: 'User',
+                schema: process.env.PG_SCHEMA
+            },
+            key: 'id'
+        }
+    }
+}, {
+    timestamps: true,
+    schema: process.env.PG_SCHEMA,
+    tableName: 'Reflection'
+});
+
+Reflection.belongsTo(User, {
+    foreignKey: { name: 'author', allowNull: false },
+    targetKey: 'id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+
+User.hasMany(Reflection, {
+    foreignKey: { name: 'author', allowNull: false },
+    sourceKey: 'id',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+
 // Tag model for article tagging
 const Tag = sequelize.define('Tag', {
     id: {
@@ -153,6 +260,31 @@ const ArticleTag = sequelize.define('ArticleTag', {
 Article.belongsToMany(Tag, { through: ArticleTag });
 Tag.belongsToMany(Article, { through: ArticleTag });
 
+// Many-to-many Trick <-> Tag
+const TrickTag = sequelize.define('TrickTag', {
+    TrickId: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: { tableName: 'Trick', schema: process.env.PG_SCHEMA },
+            key: 'id'
+        }
+    },
+    TagId: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: { tableName: 'Tag', schema: process.env.PG_SCHEMA },
+            key: 'id'
+        }
+    }
+}, {
+    timestamps: false,
+    schema: process.env.PG_SCHEMA,
+    tableName: 'TrickTag'
+});
+
+Trick.belongsToMany(Tag, { through: TrickTag });
+Tag.belongsToMany(Trick, { through: TrickTag });
+
 const File = sequelize.define('File', {
     slug: {
         type: DataTypes.STRING,
@@ -169,6 +301,21 @@ const File = sequelize.define('File', {
         type: DataTypes.BLOB,
         allowNull: true
 
+    },
+    disk_path: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    trick: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: {
+                tableName: 'Trick',
+                schema: process.env.PG_SCHEMA
+            },
+            key: 'id'
+        }
     },
     link: {
         type: DataTypes.STRING,
@@ -282,4 +429,45 @@ FileVote.belongsTo(File, { foreignKey: 'FileId' });
 User.hasMany(FileVote, { foreignKey: 'UserId' });
 FileVote.belongsTo(User, { foreignKey: 'UserId' });
 
-export { sequelize, Article, File, User, Tag, ArticleTag, ArticleVote, FileVote };
+const TrickVote = sequelize.define('TrickVote', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false
+    },
+    value: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    UserId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: { tableName: 'User', schema: process.env.PG_SCHEMA },
+            key: 'id'
+        }
+    },
+    TrickId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: { tableName: 'Trick', schema: process.env.PG_SCHEMA },
+            key: 'id'
+        }
+    }
+}, {
+    timestamps: true,
+    schema: process.env.PG_SCHEMA,
+    tableName: 'TrickVote',
+    indexes: [
+        { unique: true, fields: ['UserId', 'TrickId'] }
+    ]
+});
+
+Trick.hasMany(TrickVote, { foreignKey: 'TrickId' });
+TrickVote.belongsTo(Trick, { foreignKey: 'TrickId' });
+User.hasMany(TrickVote, { foreignKey: 'UserId' });
+TrickVote.belongsTo(User, { foreignKey: 'UserId' });
+
+export { sequelize, Article, File, User, Tag, ArticleTag, ArticleVote, FileVote, Trick, TrickTag, TrickVote, Reflection };
