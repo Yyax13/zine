@@ -31,7 +31,7 @@ import errorPage from "./modules/error.js";
     await initDb();
     app.use(routes);
 
-    app.listen("9999", () => {
-        console.log("LISTENING IN PORT 9999: http://0.0.0.0:9999")
+    app.listen(5555, "127.0.0.1", () => {
+        console.log("LISTENING IN PORT 9999: http://127.0.0.1:5555")
     });
 })();
