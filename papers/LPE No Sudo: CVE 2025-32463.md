@@ -248,7 +248,7 @@ root@f151c56ac100:/#
 
 ```
 
-## Conclão
+## Conclusão
 
 Nesse paper, entendemos como escalar privilégios de maneira até que simples, sem muito esforço, apenas explorando uma vulnerabilidade.
 Caso você fique com qualquer dúvida, sinta-se livre para me contactar no discord: `altof_howosec`!
