@@ -5,16 +5,27 @@ import renderMarkdown from './parsemd.js';
 import { Article, User, Tag, Trick } from './db.js';
 import { Op } from 'sequelize';
 import errPage from '../modules/error.js';
+import { generateOgDataUrl } from "./og.js";
 
-const renderFullHtmlPage = (title, renderedMarkdownHtml, author, date, tagsHtml, slug) => {
-    return (fs.readFileSync(path.join(__dirname, "pages", "paper.html")).toString("utf8"))
+async function renderFullHtmlPage(title, renderedMarkdownHtml, author, date, tagsHtml, slug, description = '') {
+    const template = (fs.readFileSync(path.join(__dirname, "pages", "paper.html"), 'utf8')).toString("utf8")
         .replaceAll("__insert_the_title_here", title)
         .replaceAll("__insert_author_here", author)
         .replaceAll("__insert_date_here", date)
         .replaceAll("__insert_content_here", renderedMarkdownHtml)
         .replaceAll("__insert_tags_here", tagsHtml || '')
         .replaceAll("__insert_slug_here", slug);
-};
+
+    const ogImageDataUrl = await generateOgDataUrl(title, description);
+
+    // Insere meta tag OG direto no head
+    return template.replace(
+        "__insert_meta_here",
+        `<meta property="og:title" content="${title}">
+         <meta property="og:description" content="${description}">
+         <meta property="og:image" content="${ogImageDataUrl}">`
+    );
+}
 
 async function articleViewer(req, res) {
     const { slug: articleName } = req.params;
@@ -48,8 +59,9 @@ async function articleViewer(req, res) {
     const tags = article.Tags || [];
     const tagsHtml = tags.length ? `<div class="tags">${tags.map(t => `<a href="/p?tag=${encodeURIComponent(t.name)}" class="tag">${t.name}</a>`).join(' ')}</div>` : '';
 
-    const content = renderFullHtmlPage(article.title, renderedMarkdownHtml, article.User.userName, dateStr, tagsHtml, article.slug);
-        res.status(200).send(content);
+    const content = await renderFullHtmlPage(article.title, renderedMarkdownHtml, article.User.userName, dateStr, tagsHtml, article.slug);
+    console.log("Content: ", content);
+    res.status(200).send(content);
 
     } catch (err) {
         console.error("Erro ao buscar artigo ou renderizar:", err);
