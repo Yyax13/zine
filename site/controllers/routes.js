@@ -12,10 +12,12 @@ import path from 'path'
 import { __dirname } from "../server.js";
 import { me } from './auth.js';
 import { reflectionViewer } from "./reflectionHandler.js";
+import { ogImageHandler } from "./og.js";
 
 const routes = e.Router()
 routes.use(cookieParser())
 
+routes.get("/og", ogImageHandler);
 routes.get("/p/:slug", articleViewer);
 routes.get("/t/:slug", trickViewer);
 // Auth endpoints

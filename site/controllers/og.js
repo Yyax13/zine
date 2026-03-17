@@ -2,7 +2,10 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import { __dirname } from '../server.js';
 
-async function generateOgDataUrl(title, description = '') {
+async function ogImageHandler(req, res) {
+    const title = req.query.title || '';
+    const description = req.query.description || '';
+
     const fontWoff2 = path.join(__dirname, 'public', 'css', 'fonts', 'gohu.woff2');
     const fontWoff  = path.join(__dirname, 'public', 'css', 'fonts', 'gohu.woff');
 
@@ -167,7 +170,9 @@ async function generateOgDataUrl(title, description = '') {
     const buffer = await page.screenshot({ type: 'png' });
     await browser.close();
 
-    return `data:image/png;base64,${buffer.toString('base64')}`;
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(buffer);
 }
 
-export { generateOgDataUrl }
+export { ogImageHandler }
