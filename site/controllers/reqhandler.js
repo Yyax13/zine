@@ -19,12 +19,21 @@ function renderFullHtmlPage(title, renderedMarkdownHtml, author, date, tagsHtml,
     return template.replace(
         "__insert_meta_here",
         `
-     <meta property="og:title" content="${title}">
-     <meta property="og:description" content="${description}">
-     <meta property="og:image" content="${ogImageUrl}">
-     <meta property="og:url" content="https://howosec.com/p/${slug}">
-     <meta property="og:type" content="article">
-     <meta property="og:logo" content="https://howosec.com/img/favicon.png">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${description}">
+<meta property="og:image" content="${ogImageUrl}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${title}">
+<meta property="og:url" content="https://howosec.com/p/${slug}">
+<meta property="og:type" content="article">
+<meta property="og:logo" content="https://howosec.com/img/favicon.png">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${title}">
+<meta name="twitter:description" content="${description}">
+<meta name="twitter:image" content="${ogImageUrl}">
 `
     );
 }
