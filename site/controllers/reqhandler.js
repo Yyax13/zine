@@ -7,7 +7,7 @@ import { Op } from 'sequelize';
 import errPage from '../modules/error.js';
 import { generateOgDataUrl } from "./og.js";
 
-async function renderFullHtmlPage(title, renderedMarkdownHtml, author, date, tagsHtml, slug, description = '') {
+async function renderFullHtmlPage(title, renderedMarkdownHtml, author, date, tagsHtml, slug, description) {
     const template = (fs.readFileSync(path.join(__dirname, "pages", "paper.html"), 'utf8')).toString("utf8")
         .replaceAll("__insert_the_title_here", title)
         .replaceAll("__insert_author_here", author)
@@ -21,9 +21,14 @@ async function renderFullHtmlPage(title, renderedMarkdownHtml, author, date, tag
     // Insere meta tag OG direto no head
     return template.replace(
         "__insert_meta_here",
-        `<meta property="og:title" content="${title}">
-         <meta property="og:description" content="${description}">
-         <meta property="og:image" content="${ogImageDataUrl}">`
+        `
+     <meta property="og:title" content="${title}">
+     <meta property="og:description" content="${description}">
+     <meta property="og:image" content="${ogImageDataUrl}">
+     <meta property="og:url" content="https://howosec.com/p/${slug}">
+     <meta property="og:type" content="article">
+     <meta property="og:logo" content="https://howosec.com/img/logo.png">
+`
     );
 }
 
@@ -34,7 +39,7 @@ async function articleViewer(req, res) {
     try {
         const article = await Article.findOne({
             where: { slug: articleSlug },
-            attributes: ['title', 'slug', 'content', 'createdAt'],
+            attributes: ['title', 'slug', 'content', 'createdAt', 'short_description'],
             include: [
                 {
                     model: User,
@@ -59,8 +64,7 @@ async function articleViewer(req, res) {
     const tags = article.Tags || [];
     const tagsHtml = tags.length ? `<div class="tags">${tags.map(t => `<a href="/p?tag=${encodeURIComponent(t.name)}" class="tag">${t.name}</a>`).join(' ')}</div>` : '';
 
-    const content = await renderFullHtmlPage(article.title, renderedMarkdownHtml, article.User.userName, dateStr, tagsHtml, article.slug);
-    console.log("Content: ", content);
+    const content = await renderFullHtmlPage(article.title, renderedMarkdownHtml, article.User.userName, dateStr, tagsHtml, article.slug, article.short_description);
     res.status(200).send(content);
 
     } catch (err) {
