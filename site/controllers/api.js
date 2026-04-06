@@ -409,10 +409,6 @@ export const createReflection = async (req, res) => {
         const slugBase = (title || '').toString().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
         let slug = slugBase || `reflection-${Date.now()}`;
         const exists = await Reflection.findOne({ where: { slug } });
-        if (!exists) {
-            return res.status(404).send(errPage(404, `Reflection ${title} was not found.`));
-        
-        }
         if (exists) slug = `${slug}-${Date.now()}`;
 
         const created = await Reflection.create({ title, content, language: language || null, slug, author: req.user.id });
