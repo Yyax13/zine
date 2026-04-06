@@ -5,18 +5,75 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/css/css-paper/paper.css">
-    <title>__insert_the_title_here - pwn</title>
+    <link rel="stylesheet" href="/css/css-others/code.css">
     <link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
+    <title>__insert_the_title_here - pwnbuffer.org</title>
+    __insert_meta_here
     <script src="/js/auth_widget.js" defer></script>
     <script src="/js/glitch.js"></script>
     <script src="/js/newtab.js"></script>
     <script src="/js/site_config.js" defer></script>
     <script src="/js/footer_domain.js" defer></script>
 </head>
+<style>
+    /* public/styles/mermaid-custom.css */
+
+/* Força o preenchimento do texto para uma cor clara */
+.node text {
+    fill: #fcf0f0 !important; /* Branco acinzentado do GitHub Dark */
+}
+
+.edgeLabel text {
+    fill: #ef6161 !important; /* Azulzão para labels de arestas */
+}
+
+.cluster text {
+    fill: #e06c6c !important; /* Vermelho/rosa para texto de clusters */
+}
+
+/* Estilos adicionais para os nós, se quiser forçar cores específicas */
+.node rect, .node circle, .node polygon {
+    fill: #3d2f2f !important; /* Fundo dos nós */
+    stroke: #b91313 !important; /* Borda dos nós */
+}
+
+.edgePath .path {
+    stroke: #b93f3fd3 !important; /* Linhas das arestas */
+}
+
+.arrowheadPath {
+    fill: #850d0d !important; /* Pontas das setas */
+}
+
+.zoom-in {
+    background-color: #3d2f2f;
+    border: none;
+    border-radius: 3px;
+    padding: 5px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+.zoom-out {
+    background-color: #3d2f2f;
+    border: none;
+    border-radius: 3px;
+    padding: 5px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+.reset {
+    background-color: #3d2f2f;
+    border: none;
+    border-radius: 3px;
+    padding: 5px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+</style>
 
 <body>
     <div class="main_container">
-        <header class="header">
+        <header class="header_top">
             <div class="left-section">
                 <a href="/" class="menu-link">/home</a>
                 <a href="/p" class="menu-link">/papers</a>
@@ -33,9 +90,13 @@
 
         <main class="content">
             <h1 class="pwntitle">__insert_the_title_here</h1>
-            <p><code>Author:</code> __insert_author_here<br><code>Date:</code> __insert_date_here </p>
-            <hr>
-            <pre style="white-space:pre-wrap; font-family:inherit; font-size:1rem;">__insert_content_here</pre>
+            <article>
+                    <p><code>Author:</code> __insert_author_here<br><code>Date:</code> __insert_date_here </p>
+
+                    <hr>
+
+                  __insert_content_here
+            </article>
 
             <a href="/r" class="back-link">← Voltar para reflexões</a>
         </main>
@@ -43,9 +104,16 @@
         <footer class="footer">
             <div class="footer-content">
                 <span class="site-copyright">&copy; 2026 - pwnbuffer.org </span>
+                <span class="footer-separator">|</span>
+                <a href="/a/wallpapers" target="_blank" class="footer-link">[ Wallpapers ] </a>
+                <span class="footer-separator">|</span>
+                <a href="https://discord.gg/pwnbuffer" target="_blank" class="footer-link">[ Servidor Discord ] </a>
             </div>
         </footer>
     </div>
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js"></script>
 
     <script>
         // load reflection via API and insert
@@ -58,10 +126,99 @@
                 const j = await r.json();
                 document.title = j.title + ' - pwnbuffer.org';
                 document.querySelector('.pwntitle').textContent = j.title;
-                document.body.innerHTML = document.body.innerHTML.replace('__insert_author_here', j.author?.userName || 'unknown').replace('__insert_date_here', (j.createdAt||'').split ? j.createdAt.split('T')[0] : '').replace('__insert_content_here', j.content);
+                document.querySelector('[__insert_author_here]');
+                document.body.innerHTML = document.body.innerHTML
+                    .replace('__insert_the_title_here', j.title)
+                    .replace('__insert_author_here', j.author?.userName || 'unknown')
+                    .replace('__insert_date_here', (j.createdAt || '').split ? j.createdAt.split('T')[0] : '')
+                    .replace('__insert_content_here', j.content);
             } catch (e) { /* ignore */ }
         })();
     </script>
-</body>
+    <script type="module">
+        console.log(">>> Script module iniciado!");
 
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        console.log(">>> Import mermaid funcionou!");
+
+        mermaid.initialize({
+            theme: 'dark',
+        });
+        console.log(">>> mermaid.initialize (configuração inicial) efetuado!");
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log(">>> DOMContentLoaded disparado - Preparando para renderizar e aplicar zoom aos diagramas.");
+
+            const mermaidBlocks = document.querySelectorAll('pre.mermaid');
+
+            if (mermaidBlocks.length === 0) {
+                console.warn(">>> Nenhuma tag <pre class='mermaid'> encontrada. Nenhum diagrama será processado.");
+                return;
+            }
+
+            for (const [index, block] of mermaidBlocks.entries()) {
+                const diagramText = block.textContent.trim();
+                if (!diagramText) {
+                    console.warn(`>>> Bloco <pre class='mermaid'> vazio no índice ${index}. Pulando.`);
+                    continue;
+                }
+
+                const diagramContainer = document.createElement('div');
+                diagramContainer.classList.add('diagram-container');
+
+                const customControlsDiv = document.createElement('div');
+                customControlsDiv.classList.add('custom-controls');
+                customControlsDiv.innerHTML = `
+                    <button class="zoom-in">+</button>
+                    <button class="zoom-out">−</button>
+                    <button class="reset">⟲</button>
+                `;
+
+                diagramContainer.appendChild(customControlsDiv);
+                block.parentNode.replaceChild(diagramContainer, block);
+
+                const svgRenderId = `mermaid-svg-${Date.now()}-${index}`;
+
+                try {
+                    const { svg } = await mermaid.render(svgRenderId, diagramText);
+
+                    const svgWrapper = document.createElement('div');
+                    svgWrapper.innerHTML = svg;
+                    const renderedSvgElement = svgWrapper.querySelector('svg');
+
+                    if (renderedSvgElement) {
+                        diagramContainer.appendChild(renderedSvgElement);
+
+                        const panZoomInstance = svgPanZoom(renderedSvgElement, {
+                            zoomEnabled: true,
+                            controlIconsEnabled: false,
+                            fit: true,
+                            center: true,
+                            minZoom: 0.1,
+                            maxZoom: 10,
+                            zoomScaleSensitivity: 0.2,
+                        });
+
+                        customControlsDiv.querySelector('.zoom-in').addEventListener('click', () => {
+                            panZoomInstance.zoomIn();
+                        });
+                        customControlsDiv.querySelector('.zoom-out').addEventListener('click', () => {
+                            panZoomInstance.zoomOut();
+                        });
+                        customControlsDiv.querySelector('.reset').addEventListener('click', () => {
+                            panZoomInstance.reset();
+                        });
+
+                    } else {
+                        diagramContainer.innerHTML = `<p style="color: red;">Erro ao renderizar o diagrama.</p><pre>${diagramText}</pre>`;
+                    }
+
+                } catch (error) {
+                    console.error(`>>> Erro ao renderizar ou processar diagrama ${index}:`, error);
+                    diagramContainer.innerHTML = `<p style="color: red;">Erro ao renderizar o diagrama.</p><pre>${diagramText}</pre>`;
+                }
+            }
+            console.log(">>> Processamento de todos os diagramas Mermaid concluído.");
+        });
+    </script>
 </html>

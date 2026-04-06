@@ -62,14 +62,18 @@
                     container.innerHTML = '<p style="text-align:center;color:var(--secondary-text-color);">Nenhuma reflexão encontrada.</p>';
                     return;
                 }
-                list.forEach((it) => {
+                list.forEach((it, ind) => {
+                    const indexHex = '0x' + Number(ind + 1).toString(16).toUpperCase().padStart(2, '0');
                     const li = document.createElement('li');
                     li.className = 'paper-card';
                     li.innerHTML = `
+                        <span class="paper-index">${indexHex}</span>
                         <div class="card-body">
                             <a class="paper-title" href="/r/${it.slug}">${it.title}</a>
-                            <div class="card-meta"><span class="paper-author">${it.User?.userName || 'unknown'}</span>
-                            <span class="paper-date">${(it.createdAt||'').split ? (it.createdAt.split('T')[0]) : ''}</span></div>
+                            <div class="card-meta">
+                                <span class="paper-author">${it.User?.userName || 'unknown'}</span>
+                                <span class="paper-date">${(it.createdAt || '').split ? it.createdAt.split('T')[0] : ''}</span>
+                            </div>
                         </div>`;
                     container.appendChild(li);
                 });
