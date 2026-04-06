@@ -7,8 +7,7 @@
     <link rel="stylesheet" href="/css/css-paper/paper.css">
     <link rel="stylesheet" href="/css/css-others/code.css">
     <link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
-    <title>__insert_the_title_here - pwnbuffer.org</title>
-    __insert_meta_here
+    <title>reflections - pwnbuffer.org</title>
     <script src="/js/auth_widget.js" defer></script>
     <script src="/js/glitch.js"></script>
     <script src="/js/newtab.js"></script>
@@ -89,13 +88,13 @@
         </header>
 
         <main class="content">
-            <h1 class="pwntitle">__insert_the_title_here</h1>
+            <h1 class="pwntitle"></h1>
             <article>
-                    <p><code>Author:</code> __insert_author_here<br><code>Date:</code> __insert_date_here </p>
+                    <p id="reflection-meta"></p>
 
                     <hr>
 
-                  __insert_content_here
+                  <div id="reflection-content"></div>
             </article>
 
             <a href="/r" class="back-link">← Voltar para reflexões</a>
@@ -126,12 +125,9 @@
                 const j = await r.json();
                 document.title = j.title + ' - pwnbuffer.org';
                 document.querySelector('.pwntitle').textContent = j.title;
-                document.querySelector('[__insert_author_here]');
-                document.body.innerHTML = document.body.innerHTML
-                    .replace('__insert_the_title_here', j.title)
-                    .replace('__insert_author_here', j.author?.userName || 'unknown')
-                    .replace('__insert_date_here', (j.createdAt || '').split ? j.createdAt.split('T')[0] : '')
-                    .replace('__insert_content_here', j.content);
+                document.getElementById('reflection-meta').innerHTML =
+                    `<code>Author:</code> ${j.author?.userName || 'unknown'}<br><code>Date:</code> ${(j.createdAt || '').split('T')[0]}`;
+                document.getElementById('reflection-content').textContent = j.content;
             } catch (e) { /* ignore */ }
         })();
     </script>

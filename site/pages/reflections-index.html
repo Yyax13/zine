@@ -36,7 +36,7 @@
             <h1 class="pwntitle">~/reflections</h1>
 
             <div class="list-papers">
-                <ul id="reflectionsContainer" class="papers-grid"></ul>
+                <ul id="reflectionsContainer" style="padding:0; margin:0;"></ul>
             </div>
 
             <a href="/" class="back-link">← Voltar para a página principal</a>
@@ -64,17 +64,11 @@
                 }
                 list.forEach((it, ind) => {
                     const indexHex = '0x' + Number(ind + 1).toString(16).toUpperCase().padStart(2, '0');
+                    const date = (it.createdAt || '').split('T')[0];
+                    const author = it.User?.userName || 'unknown';
                     const li = document.createElement('li');
-                    li.className = 'paper-card';
-                    li.innerHTML = `
-                        <span class="paper-index">${indexHex}</span>
-                        <div class="card-body">
-                            <a class="paper-title" href="/r/${it.slug}">${it.title}</a>
-                            <div class="card-meta">
-                                <span class="paper-author">${it.User?.userName || 'unknown'}</span>
-                                <span class="paper-date">${(it.createdAt || '').split ? it.createdAt.split('T')[0] : ''}</span>
-                            </div>
-                        </div>`;
+                    li.style.cssText = 'list-style:none; padding: 4px 0;';
+                    li.innerHTML = `<span style="font-family:inherit;">${indexHex} - <a href="/r/${it.slug}" style="font-weight:bold; text-decoration:none;">${it.title}</a> <span style="font-style:italic; font-weight:300;">${author} ${date}</span></span>`;
                     container.appendChild(li);
                 });
             } catch (e) {
